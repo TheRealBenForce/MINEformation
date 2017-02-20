@@ -1,4 +1,4 @@
-Description: 'Minecraft cloudformation'
+Description: Minecraft cloudformation
 Parameters:
     InstanceType:
         Description: Minecraft server instance type
@@ -11,11 +11,23 @@ Parameters:
         Description: The SSH key for administrative access to the EC2 instance.
         Type: String
         Default: mineformationKP
+    HostedZoneId: 
+        Description: Your HostedZoneID
+        Type: String
+        Default: Z1ZGYX2ZIYACUH
+    Domain:
+        Description: Your domain name.
+        Type: String
+        Default: therealbenforce.com
+    #DownloadLink:
+        #Description: Link to the version of Minecraft Server you want.
+        #Type: String
+        #Default: Not working yet
 Resources:
     S3Bucket:
         Type: AWS::S3::Bucket
         Properties: 
-            BucketName: Mineformation
+            BucketName: mineformation
             AccessControl: PublicRead
     Ec2Instance:
         Type: AWS::EC2::Instance
@@ -29,7 +41,8 @@ Resources:
             ImageId: ami-0b33d91d
             UserData:
                 Fn::Base64: !Sub |
-                    #!/bin/bash
+                   '#!/bin/bash'
+                    exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
                     yum update -y
                     mkdir minecraft
                     cd minecraft
@@ -41,6 +54,9 @@ Resources:
                 - 
                     Key: Name
                     Value: Minecraft
+                -
+                    Key: StackName
+                    Value: AWS::StackName
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -56,3 +72,14 @@ Resources:
                     FromPort: 25565
                     ToPort: 25565
                     CidrIp: 0.0.0.0/0
+    DNSRecord:
+        Type: AWS::Route53::RecordSet
+        Properties:
+            HostedZoneId: !Ref HostedZoneId
+            Comment: DNS name for MINEformation.
+            Name: !Join ['', ['mineformation', ., !Ref 'Domain']]
+            Type: A
+            TTL: 900
+            ResourceRecords: 
+                - !GetAtt Ec2Instance.PublicIp
+ 
