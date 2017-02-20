@@ -1,0 +1,58 @@
+Description: 'Minecraft cloudformation'
+Parameters:
+    InstanceType:
+        Description: Minecraft server instance type
+        Type: String
+        Default: t2.micro
+        AllowedValues:
+            - t2.micro
+            - m1.small
+    SshKey:
+        Description: The SSH key for administrative access to the EC2 instance.
+        Type: String
+        Default: mineformationKP
+Resources:
+    S3Bucket:
+        Type: AWS::S3::Bucket
+        Properties: 
+            BucketName: Mineformation
+            AccessControl: PublicRead
+    Ec2Instance:
+        Type: AWS::EC2::Instance
+        Properties:
+            InstanceType: 
+                Ref: InstanceType
+            SecurityGroups:
+                - Ref: InstanceSecurityGroup
+            KeyName:
+                Ref: SshKey
+            ImageId: ami-0b33d91d
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash
+                    yum update -y
+                    mkdir minecraft
+                    cd minecraft
+                    wget -O minecraft_server.jar https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
+                    java -jar minecraft_server.jar nogui
+                    sed -i -- 's/false/true/g' eula.txt
+                    java -jar minecraft_server.jar nogui
+            Tags:
+                - 
+                    Key: Name
+                    Value: Minecraft
+    InstanceSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: All that is necessary for Minecraft and administration
+            SecurityGroupIngress:
+                - 
+                    IpProtocol: tcp
+                    FromPort: 22
+                    ToPort: 22
+                    CidrIp: 0.0.0.0/0
+                - 
+                    IpProtocol: tcp
+                    FromPort: 25565
+                    ToPort: 25565
+                    CidrIp: 0.0.0.0/0
