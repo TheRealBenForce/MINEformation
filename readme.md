@@ -5,7 +5,9 @@ MINEformation is a learning exercise that leverages the beloved and familiar Min
 demonstrate the power of AWS.
 
 ## Usage
-Simply 
+Simply load the cloudformation template from your AWS account by a user with administrative access
+and you are good to go! Once your EC2 instance has passed health check, you should be able to 
+use Minecrafts online mode to connect to the server's public IP address.
 
 ## Planned features.
 - To the greatest extent possible the project will be managed via a single
