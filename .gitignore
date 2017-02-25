@@ -18,7 +18,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Temp files
-temp.*
+temp.yml
 
 # =========================
 # Operating System Files
