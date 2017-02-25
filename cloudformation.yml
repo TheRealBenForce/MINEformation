@@ -19,6 +19,14 @@ Parameters:
         Description: Your domain name.
         Type: String
         Default: therealbenforce.com
+    AMI:
+        Description: Should be a unix based AMI. Tested on only the default.
+        Type: String
+        Default: ami-0b33d91d
+    Region:
+        Description: Starting to build this out.
+        Type: String
+        Default: us-east-1    
     #DownloadLink:
         #Description: Link to the version of Minecraft Server you want.
         #Type: String
@@ -27,36 +35,8 @@ Resources:
     S3Bucket:
         Type: AWS::S3::Bucket
         Properties: 
-            BucketName: mineformation
+            BucketName: !Ref AWS::StackName
             AccessControl: PublicRead
-    Ec2Instance:
-        Type: AWS::EC2::Instance
-        Properties:
-            InstanceType: 
-                Ref: InstanceType
-            SecurityGroups:
-                - Ref: InstanceSecurityGroup
-            KeyName:
-                Ref: SshKey
-            ImageId: ami-0b33d91d
-            UserData:
-                Fn::Base64: !Sub |
-                   '#!/bin/bash'
-                    exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-                    yum update -y
-                    mkdir minecraft
-                    cd minecraft
-                    wget -O minecraft_server.jar https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
-                    java -jar minecraft_server.jar nogui
-                    sed -i -- 's/false/true/g' eula.txt
-                    java -jar minecraft_server.jar nogui
-            Tags:
-                - 
-                    Key: Name
-                    Value: Minecraft
-                -
-                    Key: StackName
-                    Value: AWS::StackName
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -72,14 +52,77 @@ Resources:
                     FromPort: 25565
                     ToPort: 25565
                     CidrIp: 0.0.0.0/0
+    MineformationASG:
+        Type: "AWS::AutoScaling::AutoScalingGroup"
+        Properties:
+            AvailabilityZones:
+                Fn::GetAZs: 
+                    Ref: "AWS::Region"
+            Cooldown: 60
+            DesiredCapacity: 1
+            HealthCheckGracePeriod: 60
+            HealthCheckType: EC2
+            LaunchConfigurationName: 
+                Ref: MineformationLaunchConfig
+            LoadBalancerNames: 
+                - !Ref myELB
+            MaxSize: 1
+            MinSize: 1
+            Tags:
+                - 
+                    Key: Name
+                    Value: mineformation-ASG
+                    PropagateAtLaunch: true
+    MineformationLaunchConfig:
+        Type: "AWS::AutoScaling::LaunchConfiguration"
+        DependsOn: DNSRecord        
+        Properties:
+            EbsOptimized: false
+            ImageId: !Ref AMI
+            InstanceMonitoring: false
+            InstanceType: 
+                Ref: InstanceType
+            KeyName:
+                Ref: SshKey
+            SecurityGroups:
+                - Ref: InstanceSecurityGroup
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash
+                    yum update -y
+                    mkdir minecraft
+                    cd minecraft
+                    wget -O minecraft_server.jar https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
+                    java -jar minecraft_server.jar nogui
+                    sed -i -- 's/false/true/g' eula.txt
+                    java -jar minecraft_server.jar nogui
     DNSRecord:
         Type: AWS::Route53::RecordSet
         Properties:
             HostedZoneId: !Ref HostedZoneId
             Comment: DNS name for MINEformation.
-            Name: !Join ['', ['mineformation', ., !Ref 'Domain']]
-            Type: A
-            TTL: 900
+            Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'Domain']]
+            Type: CNAME
+            TTL: 300
             ResourceRecords: 
-                - !GetAtt Ec2Instance.PublicIp
- 
+                - !GetAtt myELB.DNSName
+    myELB:
+        Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+        Properties:
+            AvailabilityZones:
+                Fn::GetAZs: 
+                    Ref: "AWS::Region"
+            LoadBalancerName: !Join ['', [!Ref 'AWS::StackName', 'ELB']]
+            Listeners:
+                - 
+                    InstancePort: 25565
+                    InstanceProtocol: TCP
+                    LoadBalancerPort: 25565
+                    Protocol: TCP
+            Scheme: internet-facing
+            SecurityGroups:
+                - !GetAtt InstanceSecurityGroup.GroupId
+            Tags:
+                -
+                    Key: StackName
+                    Value: AWS::StackName
