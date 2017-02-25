@@ -14,7 +14,7 @@ Parameters:
     ExistingDomainName: 
         Description: Optional, if you'd like to use Route 53 to regiser a CNAME.
         Type: String
-        Default: none
+        Default: ''
     AMI:
         Description: Should be a unix based AMI. Tested on only the default.
         Type: String
@@ -29,7 +29,7 @@ Parameters:
         #Default: Not working yet
 Conditions:
     RegisterRoute53: 
-        !Not [!Equals [!Ref ExistingDomainName, 'none']]
+        !Not [!Equals [!Ref ExistingDomainName, '']]
 Resources:
     S3Bucket:
         Type: AWS::S3::Bucket
@@ -74,7 +74,6 @@ Resources:
                     PropagateAtLaunch: true
     MineformationLaunchConfig:
         Type: "AWS::AutoScaling::LaunchConfiguration"
-        DependsOn: DNSRecord        
         Properties:
             EbsOptimized: false
             ImageId: !Ref AMI

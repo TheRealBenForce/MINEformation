@@ -6,3 +6,6 @@
 - Pull worlds from S3 if they exist.
 - Build out larger list of available instance types.
 - Logic so Route 53 registration only occurs if the domain parameter is completed.
+- Create mapping for regions.
+- Create conditions for starting from snapshots
+- Improve application health checks.
