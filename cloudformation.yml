@@ -11,14 +11,10 @@ Parameters:
         Description: The SSH key for administrative access to the EC2 instance.
         Type: String
         Default: mineformationKP
-    HostedZoneId: 
-        Description: Your HostedZoneID
+    ExistingDomainName: 
+        Description: Optional, if you'd like to use Route 53 to regiser a CNAME.
         Type: String
-        Default: Z1ZGYX2ZIYACUH
-    Domain:
-        Description: Your domain name.
-        Type: String
-        Default: therealbenforce.com
+        Default: none
     AMI:
         Description: Should be a unix based AMI. Tested on only the default.
         Type: String
@@ -31,6 +27,9 @@ Parameters:
         #Description: Link to the version of Minecraft Server you want.
         #Type: String
         #Default: Not working yet
+Conditions:
+    RegisterRoute53: 
+        !Not [!Equals [!Ref ExistingDomainName, 'none']]
 Resources:
     S3Bucket:
         Type: AWS::S3::Bucket
@@ -98,10 +97,11 @@ Resources:
                     java -jar minecraft_server.jar nogui
     DNSRecord:
         Type: AWS::Route53::RecordSet
+        Condition: RegisterRoute53
         Properties:
-            HostedZoneId: !Ref HostedZoneId
+            HostedZoneName: !Join ['', [!Ref ExistingDomainName, .]]
             Comment: DNS name for MINEformation.
-            Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'Domain']]
+            Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'ExistingDomainName']]
             Type: CNAME
             TTL: 300
             ResourceRecords: 
@@ -126,3 +126,5 @@ Resources:
                 -
                     Key: StackName
                     Value: AWS::StackName
+
+                    
