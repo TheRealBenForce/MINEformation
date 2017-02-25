@@ -5,8 +5,8 @@ MINEformation is a learning exercise that leverages the beloved and familiar Min
 demonstrate the power of AWS.
 
 ## Assumptions
-- User has created an EC2 keypair named mineformationKP
-- User a registered hosted zone with AWS.
+- User has created an EC2 keypair named mineformationKP.
+- User has a registered hosted zone with AWS.
 
 ## Usage
 This cloudformation template assumes you have registered at least one hosted zone with AWS.

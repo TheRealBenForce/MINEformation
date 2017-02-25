@@ -1,5 +1,16 @@
 Description: Minecraft cloudformation
 Parameters:
+    InstanceType:
+        Description: Minecraft server instance type
+        Type: String
+        Default: t2.micro
+        AllowedValues:
+            - t2.micro
+            - m1.small
+    SshKey:
+        Description: The SSH key for administrative access to the EC2 instance.
+        Type: String
+        Default: mineformationKP
     HostedZoneId: 
         Description: Your HostedZoneID
         Type: String
@@ -18,4 +29,4 @@ Resources:
             Type: A
             TTL: 900
             ResourceRecords: 
-                - 192.168.10.10
+                - 0.0.0.0
