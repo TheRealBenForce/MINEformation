@@ -1,4 +1,9 @@
 Description: Minecraft cloudformation
+# To Do
+# Snapshots
+# Snapshot lifecycle policy
+# CloudWatch ALarm and SNS Topic
+
 Parameters:
     InstanceType:
         Description: Minecraft server instance type
@@ -20,10 +25,9 @@ Parameters:
         Description: The SSH key for administrative access to the EC2 instance.
         Type: String
         Default: mineformationKP
-    ExistingDomainName: 
+    ExistingDomainName:
         Description: Optional, if you'd like to use Route 53 to regiser a CNAME.
         Type: String
-        Default: ''
     AMI:
         Description: Should be a unix based AMI. Tested on only the default.
         Type: String
@@ -31,58 +35,65 @@ Parameters:
     Region:
         Description: Starting to build this out.
         Type: String
-        Default: us-east-1    
-    #DownloadLink:
-        #Description: Link to the version of Minecraft Server you want.
-        #Type: String
-        #Default: Not working yet
+        Default: us-east-1
+    Bucket:
+        Description: Do you have an existing S3 backup?
+        Type: String
+        AllowedValues:
+          - Yes
+          - No
+    DownloadLink:
+        Description: Link to the version of Minecraft Server you want.
+        Type: String
+        Default: https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
 Conditions:
-    RegisterRoute53: 
+    RegisterRoute53:
         !Not [!Equals [!Ref ExistingDomainName, '']]
+    Bucket:
+        !Equals [!Ref Bucket, 'No']
 Resources:
+    BackupBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+        Condition: Bucket
+        Properties:
+            BucketName: !Ref AWS::StackName
+            AccessControl: Private
+            LifecycleConfiguration :
+                Rules:
+                    ExpirationInDays: '90'
+                    Transition:
+                      TransitionInDays: '14'
+                      StorageClass: Glacier
+            Tags:
+                -
+                    Key: Backup
+                    Value: True
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
             GroupDescription: All that is necessary for Minecraft and administration
             SecurityGroupIngress:
-                - 
+                -
                     IpProtocol: tcp
                     FromPort: 22
                     ToPort: 22
                     CidrIp: 0.0.0.0/0
-                - 
+                -
                     IpProtocol: tcp
                     FromPort: 25565
                     ToPort: 25565
                     CidrIp: 0.0.0.0/0
-    MineformationASG:
-        Type: "AWS::AutoScaling::AutoScalingGroup"
-        Properties:
-            AvailabilityZones:
-                Fn::GetAZs: 
-                    Ref: "AWS::Region"
-            Cooldown: 60
-            DesiredCapacity: 1
-            HealthCheckGracePeriod: 60
-            HealthCheckType: EC2
-            LaunchConfigurationName: 
-                Ref: MineformationLaunchConfig
-            LoadBalancerNames: 
-                - !Ref myELB
-            MaxSize: 1
-            MinSize: 1
-            Tags:
-                - 
-                    Key: Name
-                    Value: mineformation-ASG
-                    PropagateAtLaunch: true
+
+        
+
     MineformationLaunchConfig:
         Type: "AWS::AutoScaling::LaunchConfiguration"
         Properties:
             EbsOptimized: false
             ImageId: !Ref AMI
             InstanceMonitoring: false
-            InstanceType: 
+            InstanceType:
                 Ref: InstanceType
             KeyName:
                 Ref: SshKey
@@ -94,7 +105,7 @@ Resources:
                     yum update -y
                     mkdir minecraft
                     cd minecraft
-                    wget -O minecraft_server.jar https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
+                    !Join [ '', ['wget -O minecraft_server.jar',  !Ref 'DownloadLink']]
                     java -jar minecraft_server.jar nogui
                     sed -i -- 's/false/true/g' eula.txt
                     java -jar minecraft_server.jar nogui
@@ -107,27 +118,5 @@ Resources:
             Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'ExistingDomainName']]
             Type: CNAME
             TTL: 300
-            ResourceRecords: 
+            ResourceRecords:
                 - !GetAtt myELB.DNSName
-    myELB:
-        Type: "AWS::ElasticLoadBalancing::LoadBalancer"
-        Properties:
-            AvailabilityZones:
-                Fn::GetAZs: 
-                    Ref: "AWS::Region"
-            LoadBalancerName: !Join ['', [!Ref 'AWS::StackName', 'ELB']]
-            Listeners:
-                - 
-                    InstancePort: 25565
-                    InstanceProtocol: TCP
-                    LoadBalancerPort: 25565
-                    Protocol: TCP
-            Scheme: internet-facing
-            SecurityGroups:
-                - !GetAtt InstanceSecurityGroup.GroupId
-            Tags:
-                -
-                    Key: StackName
-                    Value: AWS::StackName
-
-                    
