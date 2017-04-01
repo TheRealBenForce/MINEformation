@@ -69,6 +69,7 @@ Resources:
                 -
                     Key: Backup
                     Value: True
+
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -84,23 +85,34 @@ Resources:
                     FromPort: 25565
                     ToPort: 25565
                     CidrIp: 0.0.0.0/0
-    myEIP:
-      Type: "AWS::EC2::EIP"
-      Properties:
-        Domain: VPC
 
-    MineformationLaunchConfig:
-        Type: "AWS::AutoScaling::LaunchConfiguration"
+    myEIP:
+        Type: "AWS::EC2::EIP"
         Properties:
+            InstanceId: !Ref myEC2
+
+    myEC2:
+        Type: "AWS::EC2::Instance"
+        Properties:
+            DisableApiTermination: true
             EbsOptimized: false
             ImageId: !Ref AMI
-            InstanceMonitoring: false
-            InstanceType:
-                Ref: InstanceType
-            KeyName:
-                Ref: SshKey
-            SecurityGroups:
-                - Ref: InstanceSecurityGroup
+            InstanceInitiatedShutdownBehavior: stop
+            InstanceType: !Ref InstanceType
+            Ipv6AddressCount: Integer
+            Ipv6Addresses:
+              - IPv6 Address Type
+            KernelId: String
+            KeyName: !Ref SshKey
+            Monitoring: Boolean
+            NetworkInterfaces:
+              - EC2 Network Interface"
+            PlacementGroupName: String
+            PrivateIpAddress: String
+            RamdiskId: String
+            SecurityGroups: !Ref InstanceSecurityGroup
+            Tags:
+              - Resource Tag
             UserData:
                 Fn::Base64: !Sub |
                     #!/bin/bash
@@ -111,6 +123,7 @@ Resources:
                     java -jar minecraft_server.jar nogui
                     sed -i -- 's/false/true/g' eula.txt
                     java -jar minecraft_server.jar nogui
+
     DNSRecord:
         Type: AWS::Route53::RecordSet
         Condition: RegisterRoute53
