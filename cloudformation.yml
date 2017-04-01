@@ -68,32 +68,20 @@ Resources:
     myEC2:
         Type: "AWS::EC2::Instance"
         Properties:
-            DisableApiTermination: true
             EbsOptimized: false
             ImageId: !Ref AMI
             InstanceInitiatedShutdownBehavior: stop
             InstanceType: !Ref InstanceType
-            Ipv6AddressCount: Integer
-            Ipv6Addresses:
-              - IPv6 Address Type
-            KernelId: String
             KeyName: !Ref SshKey
-            Monitoring: Boolean
-            NetworkInterfaces:
-              - EC2 Network Interface"
-            PlacementGroupName: String
-            PrivateIpAddress: String
-            RamdiskId: String
-            SecurityGroups: !Ref InstanceSecurityGroup
-            Tags:
-              - Resource Tag
+            SecurityGroups:
+                - !Ref InstanceSecurityGroup
             UserData:
                 Fn::Base64: !Sub |
                     #!/bin/bash
                     yum update -y
                     mkdir minecraft
                     cd minecraft
-                    !Join [ '', ['wget -O minecraft_server.jar',  !Ref 'DownloadLink']]
+                    wget -O minecraft_server.jar ${DownloadLink}
                     java -jar minecraft_server.jar nogui
                     sed -i -- 's/false/true/g' eula.txt
                     java -jar minecraft_server.jar nogui
