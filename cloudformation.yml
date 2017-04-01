@@ -84,8 +84,10 @@ Resources:
                     FromPort: 25565
                     ToPort: 25565
                     CidrIp: 0.0.0.0/0
-
-        
+    myEIP:
+      Type: "AWS::EC2::EIP"
+      Properties:
+        Domain: VPC
 
     MineformationLaunchConfig:
         Type: "AWS::AutoScaling::LaunchConfiguration"
