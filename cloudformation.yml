@@ -36,12 +36,6 @@ Parameters:
         Description: Starting to build this out.
         Type: String
         Default: us-east-1
-    Bucket:
-        Description: Do you have an existing S3 backup?
-        Type: String
-        AllowedValues:
-          - Yes
-          - No
     DownloadLink:
         Description: Link to the version of Minecraft Server you want.
         Type: String
