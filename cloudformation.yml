@@ -52,24 +52,6 @@ Conditions:
     Bucket:
         !Equals [!Ref Bucket, 'No']
 Resources:
-    BackupBucket:
-        Type: AWS::S3::Bucket
-        DeletionPolicy: Retain
-        Condition: Bucket
-        Properties:
-            BucketName: !Ref AWS::StackName
-            AccessControl: Private
-            LifecycleConfiguration :
-                Rules:
-                    ExpirationInDays: '90'
-                    Transition:
-                      TransitionInDays: '14'
-                      StorageClass: Glacier
-            Tags:
-                -
-                    Key: Backup
-                    Value: True
-
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
