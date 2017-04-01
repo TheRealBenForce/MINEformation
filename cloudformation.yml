@@ -49,8 +49,6 @@ Parameters:
 Conditions:
     RegisterRoute53:
         !Not [!Equals [!Ref ExistingDomainName, '']]
-    Bucket:
-        !Equals [!Ref Bucket, 'No']
 Resources:
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
