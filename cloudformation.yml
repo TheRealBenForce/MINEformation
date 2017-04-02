@@ -93,7 +93,7 @@ Resources:
             HostedZoneName: !Join ['', [!Ref ExistingDomainName, .]]
             Comment: DNS name for MINEformation.
             Name: !Join ['', [!Ref 'AWS::StackName', ., !Ref 'ExistingDomainName']]
-            Type: CNAME
+            Type: A
             TTL: 300
             ResourceRecords:
                 - !Ref myEIP
