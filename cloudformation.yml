@@ -112,3 +112,22 @@ Resources:
             - Endpoint: !Ref EmailEndpoint
               Protocol: email
           TopicName: MineSnsTopic
+
+    ShutdownTestAlarm:
+    # Need to prepare minecraft boot script before scheduling ec2:recover alarm action
+        Type: AWS::CloudWatch::Alarm
+        Properties:
+          AlarmDescription: Trigger a notification when instance status check fails for 15 consecutive minutes.
+          Namespace: AWS/EC2
+          MetricName: StatusCheckFailed_System
+          Statistic: Minimum
+          Period: '60'
+          EvaluationPeriods: '15'
+          ComparisonOperator: GreaterThanThreshold
+          Threshold: '0'
+          AlarmActions:
+            - !Ref mineSNS
+          Dimensions:
+          - Name: InstanceId
+            Value:
+              Ref: myEC2
