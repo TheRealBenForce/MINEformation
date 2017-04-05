@@ -40,6 +40,10 @@ Parameters:
         Description: Link to the version of Minecraft Server you want.
         Type: String
         Default: https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
+    EmailEndpoint:
+        Description: The email addess you'd like to use to receive event information
+        Type: String
+        Default: therealbenforce@gmail.com
 Conditions:
     RegisterRoute53:
         !Not [!Equals [!Ref ExistingDomainName, '']]
@@ -97,3 +101,14 @@ Resources:
             TTL: 300
             ResourceRecords:
                 - !Ref myEIP
+
+##############
+# MONITORING #
+##############
+    mineSNS:
+        Type: "AWS::SNS::Topic"
+        Properties:
+          Subscription:
+            - Endpoint: !Ref EmailEndpoint
+              Protocol: email
+          TopicName: MineSnsTopic
