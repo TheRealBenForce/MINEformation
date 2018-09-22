@@ -8,19 +8,7 @@ Parameters:
     InstanceType:
         Description: Minecraft server instance type
         Type: String
-        Default: t2.micro
-        AllowedValues:
-            - t2.nano
-            - t2.micro
-            - t2.small
-            - t2.medium
-            - t2.large
-            - t2.xlarge
-            - t2.2zlarge
-            - m3.medium
-            - m3.large
-            - m3.xlarge
-            - m3.2xlarge
+        Default: t3.small
     SshKey:
         Description: The SSH key for administrative access to the EC2 instance.
         Type: String
@@ -39,7 +27,7 @@ Parameters:
     DownloadLink:
         Description: Link to the version of Minecraft Server you want.
         Type: String
-        Default: https://s3.amazonaws.com/Minecraft.Download/versions/1.11.2/minecraft_server.1.11.2.jar
+        Default: https://launcher.mojang.com/v1/objects/fe123682e9cb30031eae351764f653500b7396c9/server.jar
     EmailEndpoint:
         Description: The email addess you'd like to use to receive event information
         Type: String
